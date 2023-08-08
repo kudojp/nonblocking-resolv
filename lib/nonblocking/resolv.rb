@@ -682,21 +682,16 @@ module Nonblocking
             if timeout <= 0
               raise ResolvTimeout
             end
-
-            # Use the self pipe trick
-            self_reader, self_writer = IO.pipe
-            @socks << self_reader
-            self_writer.write 0
-
-            select_result = IO.select(@socks, nil, nil, timeout)
-
-            @socks.delete self_reader
-            select_result[0].delete self_reader
-            if select_result[0].empty?
-              Fiber.yield :try_again
-              next
+            if @socks.size == 1
+              select_result = @socks[0].wait_readable(timeout) ? [ @socks ] : nil
+            else
+              select_result = IO.select(@socks, nil, nil, timeout)
             end
-
+            if !select_result
+              after_select = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+              next if after_select < timelimit
+              raise ResolvTimeout
+            end
             begin
               reply, from = recv_reply(select_result[0])
             rescue Errno::ECONNREFUSED, # GNU/Linux, FreeBSD
