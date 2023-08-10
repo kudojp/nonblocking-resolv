@@ -683,20 +683,24 @@ module Nonblocking
               raise ResolvTimeout
             end
 
-            # Use the self pipe trick
-            self_reader, self_writer = IO.pipe
-            @socks << self_reader
-            self_writer.write 0
+            Fiber.yield @socks, timelimit
+            # Here, when this fiber is resumed, at least one of @socks is ready or it timed out.
 
-            select_result = IO.select(@socks, nil, nil, timeout)
+            # `wait_readable` cannot be used here because it uses FiberScheduler#io_wait internally.
+            select_result = IO.select(@socks, nil, nil, 0)
 
-            @socks.delete self_reader
-            select_result[0].delete self_reader
-            if select_result[0].empty?
-              Fiber.yield :try_again
-              next
+            # Below is the original implementation of resolv gem.
+            #
+            # if @socks.size == 1
+            #   select_result = @socks[0].wait_readable(timeout) ? [ @socks ] : nil
+            # else
+            #   select_result = IO.select(@socks, nil, nil, timeout)
+            # end
+            if !select_result
+              after_select = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+              next if after_select < timelimit
+              raise ResolvTimeout
             end
-
             begin
               reply, from = recv_reply(select_result[0])
             rescue Errno::ECONNREFUSED, # GNU/Linux, FreeBSD
