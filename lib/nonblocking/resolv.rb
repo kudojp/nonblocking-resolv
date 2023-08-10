@@ -682,11 +682,20 @@ module Nonblocking
             if timeout <= 0
               raise ResolvTimeout
             end
-            if @socks.size == 1
-              select_result = @socks[0].wait_readable(timeout) ? [ @socks ] : nil
-            else
-              select_result = IO.select(@socks, nil, nil, timeout)
-            end
+
+            Fiber.yield @socks, timelimit
+            # Here, when this fiber is resumed, at least one of @socks is ready or it timed out.
+
+            # `wait_readable` cannot be used here because it uses FiberScheduler#io_wait internally.
+            select_result = IO.select(@socks, nil, nil, 0)
+
+            # Below is the original implementation of resolv gem.
+            #
+            # if @socks.size == 1
+            #   select_result = @socks[0].wait_readable(timeout) ? [ @socks ] : nil
+            # else
+            #   select_result = IO.select(@socks, nil, nil, timeout)
+            # end
             if !select_result
               after_select = Process.clock_gettime(Process::CLOCK_MONOTONIC)
               next if after_select < timelimit
