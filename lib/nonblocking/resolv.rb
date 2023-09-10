@@ -414,12 +414,16 @@ module Nonblocking
       end
 
       def use_ipv6? # :nodoc:
-        begin
-          list = Socket.ip_address_list
-        rescue NotImplementedError
-          return true
-        end
-        list.any? {|a| a.ipv6? && !a.ipv6_loopback? && !a.ipv6_linklocal? }
+        # This is a patch on the bug which has not fixed in the upstream "ruby/resolv" gem.
+        # ref. https://bugs.ruby-lang.org/issues/14922
+        true
+
+        # begin
+        #   list = Socket.ip_address_list
+        # rescue NotImplementedError
+        #   return true
+        # end
+        # list.any? {|a| a.ipv6? && !a.ipv6_loopback? && !a.ipv6_linklocal? }
       end
       private :use_ipv6?
 
