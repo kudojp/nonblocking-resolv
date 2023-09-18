@@ -8,11 +8,11 @@ end
 Gem::Specification.new do |spec|
   spec.name          = name
   spec.version       = version
-  spec.authors       = ["Tanaka Akira"]
-  spec.email         = ["akr@fsij.org"]
+  spec.authors       = ["Daiki Kudo"] # Forked from https://github.com/ruby/resolv
+  spec.email         = ["heyjudejudejude1968@gmail.com"]
 
-  spec.summary       = %q{Thread-aware DNS resolver library in Ruby.}
-  spec.description   = %q{Thread-aware DNS resolver library in Ruby.}
+  spec.summary       = %q{Thread-aware DNS resolver library wrapped in a fiber in Ruby.}
+  spec.description   = %q{Thread-aware DNS resolver library wrapped in a fiber in Ruby.}
   spec.homepage      = "https://github.com/ruby/resolv"
   spec.required_ruby_version = Gem::Requirement.new(">= 2.3.0")
   spec.licenses      = ["Ruby", "BSD-2-Clause"]
