@@ -1,15 +1,17 @@
-# Resolv
+# ResolvFiber
 
 Resolv is a thread-aware DNS resolver library written in Ruby.  Resolv can
 handle multiple DNS requests concurrently without blocking the entire Ruby
 interpreter.
+
+ResolvFiber is a fiber which wraps this DNS resolution.
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'resolv'
+gem 'resolv_fiber'
 ```
 
 And then execute:
@@ -24,15 +26,12 @@ Or install it yourself as:
 
 
 ```ruby
-p Resolv.getaddress "www.ruby-lang.org"
-p Resolv.getname "210.251.121.214"
-
-Resolv::DNS.open do |dns|
-  ress = dns.getresources "www.ruby-lang.org", Resolv::DNS::Resource::IN::A
-  p ress.map(&:address)
-  ress = dns.getresources "ruby-lang.org", Resolv::DNS::Resource::IN::MX
-  p ress.map { |r| [r.exchange.to_s, r.preference] }
+fiber = ::ResolvFiber.getaddresses_fiber(hostname)
+while fiber.alive?
+  result = fiber.resume
 end
+
+puts result
 ```
 
 ## Development
@@ -43,5 +42,5 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/ruby/resolv.
+Bug reports and pull requests are welcome on GitHub at https://github.com/kudop/resolv_fiber.
 
